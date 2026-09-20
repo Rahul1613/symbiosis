@@ -10,10 +10,10 @@ export function Header() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+    <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+          <Link href="/" className="text-2xl font-bold text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
             SocialHub
           </Link>
 
