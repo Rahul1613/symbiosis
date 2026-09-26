@@ -55,15 +55,15 @@ export default function QuestionsPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-[var(--foreground)] mb-2">Questions &amp; Answers</h1>
-            <p className="text-[var(--muted-foreground)]">Ask questions and share knowledge with the community</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--foreground)] mb-2">Questions &amp; Answers</h1>
+            <p className="text-[var(--muted-foreground)] text-sm sm:text-base">Ask questions and share knowledge with the community</p>
           </div>
           {session && (
             <Link
               href="/questions/ask"
-              className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-lg hover:opacity-90 transition font-medium whitespace-nowrap"
+              className="self-start sm:self-auto px-5 py-2.5 bg-[var(--primary)] text-white rounded-lg hover:opacity-90 transition font-medium whitespace-nowrap text-sm sm:text-base"
             >
               Ask a Question
             </Link>

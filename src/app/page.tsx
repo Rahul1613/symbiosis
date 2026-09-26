@@ -16,7 +16,7 @@ export default function Home() {
             Your social hub — all platforms, one place
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold text-[var(--foreground)] mb-6 leading-tight tracking-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-[var(--foreground)] mb-6 leading-tight tracking-tight">
             Connect. Share.{' '}
             <span className="bg-gradient-to-r from-[var(--primary)] via-violet-400 to-pink-400 bg-clip-text text-transparent">
               Discover.
