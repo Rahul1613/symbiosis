@@ -12,7 +12,7 @@ async function initDatabase() {
     console.log('Starting database initialization...');
 
     // Read and execute schema
-    const schemaPath = join(process.cwd(), 'db', 'schema.sql');
+    const schemaPath = join(process.cwd(), 'src', 'db', 'schema.sql');
     const schema = readFileSync(schemaPath, 'utf-8');
     
     await pool.query(schema);

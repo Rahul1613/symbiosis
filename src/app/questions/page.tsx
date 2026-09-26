@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { Search, MessageSquare, Clock, TrendingUp } from 'lucide-react';
+import { Search, Clock, TrendingUp } from 'lucide-react';
+
+const inputClass =
+  'w-full pl-10 pr-4 py-2 border border-[var(--border)] bg-[var(--secondary)] text-[var(--foreground)] placeholder-[var(--muted-foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition';
 
 export default function QuestionsPage() {
   const { data: session } = useSession();
@@ -16,27 +19,16 @@ export default function QuestionsPage() {
 
   useEffect(() => {
     fetchQuestions();
-  }, [page, search, sortBy]);
+  }, [page, sortBy]);
 
   const fetchQuestions = async () => {
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '10',
-        sortBy,
-      });
-
+      const params = new URLSearchParams({ page: page.toString(), limit: '10', sortBy });
       if (search) params.append('search', search);
-
       const response = await fetch(`/api/questions?${params.toString()}`);
       const data = await response.json();
-
       if (response.ok) {
-        if (page === 1) {
-          setQuestions(data.questions);
-        } else {
-          setQuestions([...questions, ...data.questions]);
-        }
+        setQuestions(page === 1 ? data.questions : [...questions, ...data.questions]);
         setHasMore(data.pagination.hasNextPage);
       }
     } catch (error) {
@@ -53,22 +45,25 @@ export default function QuestionsPage() {
     fetchQuestions();
   };
 
-  const loadMore = () => {
-    setPage(page + 1);
-  };
+  const sortBtnClass = (val: string) =>
+    `flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+      sortBy === val
+        ? 'bg-[var(--primary)] text-white'
+        : 'bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]'
+    }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[var(--background)] py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Questions & Answers</h1>
-            <p className="text-gray-600">Ask questions and share knowledge with the community</p>
+            <h1 className="text-4xl font-bold text-[var(--foreground)] mb-2">Questions &amp; Answers</h1>
+            <p className="text-[var(--muted-foreground)]">Ask questions and share knowledge with the community</p>
           </div>
           {session && (
             <Link
               href="/questions/ask"
-              className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+              className="px-5 py-2.5 bg-[var(--primary)] text-white rounded-lg hover:opacity-90 transition font-medium whitespace-nowrap"
             >
               Ask a Question
             </Link>
@@ -76,65 +71,44 @@ export default function QuestionsPage() {
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-6 mb-6">
           <form onSubmit={handleSearch} className="flex gap-4 mb-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] w-5 h-5" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search questions..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className={inputClass}
               />
             </div>
             <button
               type="submit"
-              className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+              className="px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:opacity-90 transition font-medium"
             >
               Search
             </button>
           </form>
 
           <div className="flex gap-2">
-            <button
-              onClick={() => setSortBy('newest')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                sortBy === 'newest'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              <Clock className="w-4 h-4 inline mr-2" />
-              Newest
+            <button onClick={() => { setSortBy('newest'); setPage(1); }} className={sortBtnClass('newest')}>
+              <Clock className="w-4 h-4" /> Newest
             </button>
-            <button
-              onClick={() => setSortBy('most-answered')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                sortBy === 'most-answered'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              <TrendingUp className="w-4 h-4 inline mr-2" />
-              Most Answered
+            <button onClick={() => { setSortBy('most-answered'); setPage(1); }} className={sortBtnClass('most-answered')}>
+              <TrendingUp className="w-4 h-4" /> Most Answered
             </button>
           </div>
         </div>
 
         {/* Questions List */}
         {isLoading && questions.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-600">Loading questions...</div>
-          </div>
+          <div className="text-center py-12 text-[var(--muted-foreground)] animate-pulse">Loading questions...</div>
         ) : questions.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-600 mb-4">No questions found</div>
+            <p className="text-[var(--muted-foreground)] mb-4">No questions found</p>
             {session && (
-              <Link
-                href="/questions/ask"
-                className="text-gray-900 hover:underline"
-              >
+              <Link href="/questions/ask" className="text-[var(--primary)] hover:underline font-medium">
                 Be the first to ask a question!
               </Link>
             )}
@@ -146,31 +120,25 @@ export default function QuestionsPage() {
                 <Link
                   key={question.id}
                   href={`/questions/${question.id}`}
-                  className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6"
+                  className="block bg-[var(--card)] border border-[var(--border)] rounded-xl hover:border-[var(--primary)] transition-colors p-6"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
-                      <div className="text-2xl font-bold text-gray-900">
-                        {question.answer_count}
-                      </div>
-                      <div className="text-xs text-gray-500">answers</div>
+                    <div className="flex flex-col items-center text-center min-w-[56px] bg-[var(--secondary)] rounded-lg py-2 px-1">
+                      <div className="text-2xl font-bold text-[var(--foreground)]">{question.answer_count}</div>
+                      <div className="text-xs text-[var(--muted-foreground)]">answers</div>
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-xl font-semibold mb-2 hover:text-gray-700 transition-colors">
+                      <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1 hover:text-[var(--primary)] transition-colors">
                         {question.title}
                       </h2>
-                      <p className="text-gray-600 mb-3 line-clamp-2">{question.body}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
+                      <p className="text-[var(--muted-foreground)] text-sm mb-3 line-clamp-2">{question.body}</p>
+                      <div className="flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
+                        <div className="flex items-center gap-1.5">
                           {question.avatar_url ? (
-                            <img
-                              src={question.avatar_url}
-                              alt={question.name}
-                              className="w-5 h-5 rounded-full"
-                            />
+                            <img src={question.avatar_url} alt={question.name} className="w-5 h-5 rounded-full" />
                           ) : (
-                            <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs">
-                              {question.name.charAt(0)}
+                            <div className="w-5 h-5 rounded-full bg-[var(--primary)] flex items-center justify-center text-white text-[10px] font-bold">
+                              {question.name?.charAt(0)}
                             </div>
                           )}
                           <span>{question.name}</span>
@@ -193,8 +161,8 @@ export default function QuestionsPage() {
             {hasMore && (
               <div className="text-center mt-8">
                 <button
-                  onClick={loadMore}
-                  className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => setPage(page + 1)}
+                  className="px-6 py-3 bg-[var(--primary)] text-white rounded-lg hover:opacity-90 transition font-medium"
                 >
                   Load More
                 </button>

@@ -34,11 +34,14 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(validatedData.password, 10);
 
+    // Auto-generate avatar from DiceBear
+    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(validatedData.username)}`;
+
     // Create user
     const userId = `user_${Date.now()}`;
     const result = await query(
-      'INSERT INTO users (id, name, username, email, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, username, email',
-      [userId, validatedData.name, validatedData.username, validatedData.email, passwordHash]
+      'INSERT INTO users (id, name, username, email, password_hash, avatar_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, username, email',
+      [userId, validatedData.name, validatedData.username, validatedData.email, passwordHash, avatarUrl]
     );
 
     const user = result.rows[0];

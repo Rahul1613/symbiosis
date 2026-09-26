@@ -42,11 +42,19 @@ export async function GET(request: NextRequest) {
 
     const usersQuery = `
       SELECT 
-        id, name, username, email, avatar_url, bio, created_at,
-        (SELECT COUNT(*) FROM social_links WHERE user_id = users.id) as social_links_count
-      FROM users
-      ${whereClause}
-      ORDER BY created_at DESC
+        u.id, u.name, u.username, u.avatar_url, u.bio, u.created_at,
+        COALESCE(
+          json_agg(
+            json_build_object('id', sl.id, 'platform', sl.platform, 'url', sl.url, 'label', sl.label)
+            ORDER BY sl.created_at
+          ) FILTER (WHERE sl.id IS NOT NULL),
+          '[]'
+        ) AS social_links
+      FROM users u
+      LEFT JOIN social_links sl ON sl.user_id = u.id
+      ${whereClause.replace(/users\./g, 'u.')}
+      GROUP BY u.id, u.name, u.username, u.avatar_url, u.bio, u.created_at
+      ORDER BY u.created_at DESC
       LIMIT $${paramCount - 1} OFFSET $${paramCount}
     `;
 

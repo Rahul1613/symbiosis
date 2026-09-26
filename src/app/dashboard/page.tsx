@@ -4,18 +4,15 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Plus, Trash2, Edit2, X, Upload } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
+import { PLATFORMS } from '@/lib/platforms';
 
-const PLATFORMS = [
-  { value: 'instagram', label: 'Instagram', color: 'bg-pink-500' },
-  { value: 'snapchat', label: 'Snapchat', color: 'bg-yellow-500' },
-  { value: 'linkedin', label: 'LinkedIn', color: 'bg-blue-600' },
-  { value: 'twitter', label: 'Twitter/X', color: 'bg-black' },
-  { value: 'youtube', label: 'YouTube', color: 'bg-red-600' },
-  { value: 'tiktok', label: 'TikTok', color: 'bg-gray-900' },
-  { value: 'github', label: 'GitHub', color: 'bg-gray-800' },
-  { value: 'custom', label: 'Custom', color: 'bg-purple-500' },
-];
+const PLATFORM_LIST = Object.entries(PLATFORMS).map(([value, p]) => ({ value, ...p }));
+
+const inputClass =
+  'w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--secondary)] text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition';
+
+const cardClass = 'bg-[var(--card)] rounded-xl border border-[var(--border)] p-6 shadow-sm';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -56,7 +53,6 @@ export default function DashboardPage() {
           bio: data.user.bio || '',
           avatarUrl: data.user.avatar_url || '',
         });
-        // Fetch social links
         const linksResponse = await fetch('/api/users/' + (data.user as any).username);
         const linksData = await linksResponse.json();
         if (linksResponse.ok) {
@@ -73,21 +69,19 @@ export default function DashboardPage() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-
     try {
       const response = await fetch('/api/users/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profile),
       });
-
       if (response.ok) {
         toast.success('Profile updated successfully!');
       } else {
         const data = await response.json();
         toast.error(data.error || 'Failed to update profile');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred');
     } finally {
       setIsSaving(false);
@@ -96,14 +90,12 @@ export default function DashboardPage() {
 
   const handleAddLink = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const response = await fetch('/api/social-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLink),
       });
-
       if (response.ok) {
         const data = await response.json();
         setSocialLinks([...socialLinks, data.socialLink]);
@@ -114,261 +106,264 @@ export default function DashboardPage() {
         const data = await response.json();
         toast.error(data.error || 'Failed to add link');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred');
     }
   };
 
   const handleDeleteLink = async (id: string) => {
     try {
-      const response = await fetch(`/api/social-links/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/social-links/${id}`, { method: 'DELETE' });
       if (response.ok) {
         setSocialLinks(socialLinks.filter((link) => link.id !== id));
         toast.success('Social link removed!');
       } else {
         toast.error('Failed to remove link');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred');
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+        <div className="text-[var(--muted-foreground)] animate-pulse text-lg">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+    <div className="min-h-screen bg-[var(--background)] py-10 px-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">Dashboard</h1>
 
-        <div className="grid gap-6">
-          {/* Profile Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
-            <form onSubmit={handleProfileUpdate} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.name}
-                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.username}
-                    onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
+        {/* Edit Profile Card */}
+        <div className={cardClass}>
+          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-5">Edit Profile</h2>
+          <form onSubmit={handleProfileUpdate} className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bio
-                </label>
-                <textarea
-                  value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Avatar URL
+                <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                  Name
                 </label>
                 <input
-                  type="url"
-                  value={profile.avatarUrl}
-                  onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                  placeholder="https://example.com/avatar.jpg"
+                  type="text"
+                  value={profile.name}
+                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                  className={inputClass}
+                  placeholder="Your name"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={profile.username}
+                  onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                  className={inputClass}
+                  placeholder="yourhandle"
+                />
+              </div>
+            </div>
 
+            <div>
+              <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                Bio
+              </label>
+              <textarea
+                value={profile.bio}
+                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                rows={3}
+                className={inputClass}
+                placeholder="Tell us about yourself..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                Avatar URL
+              </label>
+              <input
+                type="url"
+                value={profile.avatarUrl}
+                onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })}
+                className={inputClass}
+                placeholder="https://example.com/avatar.jpg"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="bg-[var(--primary)] text-white px-6 py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 font-medium"
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </form>
+        </div>
+
+        {/* Social Links Card */}
+        <div className={cardClass}>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-xl font-semibold text-[var(--foreground)]">Social Links</h2>
+            <button
+              onClick={() => setShowAddLink(!showAddLink)}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:opacity-90 transition text-sm font-medium"
+            >
+              {showAddLink ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {showAddLink ? 'Cancel' : 'Add Link'}
+            </button>
+          </div>
+
+          {showAddLink && (
+            <form
+              onSubmit={handleAddLink}
+              className="mb-6 p-4 bg-[var(--secondary)] rounded-lg border border-[var(--border)] space-y-4"
+            >
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                    Platform
+                  </label>
+                  <select
+                    value={newLink.platform}
+                    onChange={(e) => setNewLink({ ...newLink, platform: e.target.value })}
+                    className={inputClass}
+                  >
+                    {PLATFORM_LIST.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                    URL
+                  </label>
+                  <input
+                    type="url"
+                    value={newLink.url}
+                    onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+                    className={inputClass}
+                    placeholder="https://..."
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-1">
+                    Label (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newLink.label}
+                    onChange={(e) => setNewLink({ ...newLink, label: e.target.value })}
+                    className={inputClass}
+                    placeholder="My Profile"
+                  />
+                </div>
+              </div>
               <button
                 type="submit"
-                disabled={isSaving}
-                className="bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+                className="bg-[var(--primary)] text-white px-5 py-2 rounded-lg hover:opacity-90 transition text-sm font-medium"
               >
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </form>
-          </div>
-
-          {/* Social Links Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Social Links</h2>
-              <button
-                onClick={() => setShowAddLink(!showAddLink)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
                 Add Link
               </button>
-            </div>
+            </form>
+          )}
 
-            {showAddLink && (
-              <form onSubmit={handleAddLink} className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Platform
-                    </label>
-                    <select
-                      value={newLink.platform}
-                      onChange={(e) => setNewLink({ ...newLink, platform: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                    >
-                      {PLATFORMS.map((platform) => (
-                        <option key={platform.value} value={platform.value}>
-                          {platform.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      URL
-                    </label>
-                    <input
-                      type="url"
-                      value={newLink.url}
-                      onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                      placeholder="https://..."
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Label (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={newLink.label}
-                      onChange={(e) => setNewLink({ ...newLink, label: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                      placeholder="My Profile"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <button
-                    type="submit"
-                    className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          <div className="space-y-3">
+            {socialLinks.length === 0 ? (
+              <p className="text-[var(--muted-foreground)] text-center py-8">
+                No social links added yet
+              </p>
+            ) : (
+              socialLinks.map((link) => {
+                const platform = PLATFORMS[link.platform] || PLATFORMS.custom;
+                return (
+                  <div
+                    key={link.id}
+                    className="flex items-center justify-between p-4 bg-[var(--secondary)] rounded-lg border border-[var(--border)]"
                   >
-                    Add Link
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddLink(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
-
-            <div className="space-y-3">
-              {socialLinks.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No social links added yet</p>
-              ) : (
-                socialLinks.map((link) => {
-                  const platform = PLATFORMS.find((p) => p.value === link.platform);
-                  return (
-                    <div
-                      key={link.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 ${platform?.color || 'bg-gray-500'} rounded-full flex items-center justify-center text-white font-bold`}>
-                          {platform?.label.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium">{link.label || platform?.label}</p>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-gray-600 hover:underline"
-                          >
-                            {link.url}
-                          </a>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteLink(link.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`w-10 h-10 ${platform.color} rounded-xl flex items-center justify-center ${platform.textColor} hover:opacity-80 transition shadow-sm`}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <span className="w-5 h-5" dangerouslySetInnerHTML={{ __html: platform.logo }} />
+                      </a>
+                      <div>
+                        <p className="font-medium text-[var(--foreground)]">
+                          {link.label || platform.label}
+                        </p>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-[var(--muted-foreground)] hover:text-[var(--primary)] transition"
+                        >
+                          {link.url}
+                        </a>
+                      </div>
                     </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Profile Preview Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Profile Preview</h2>
-            <div className="border rounded-lg p-6 bg-gray-50">
-              <div className="flex items-center gap-4 mb-4">
-                {profile.avatarUrl ? (
-                  <img
-                    src={profile.avatarUrl}
-                    alt={profile.name}
-                    className="w-16 h-16 rounded-full"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-xl">
-                    {profile.name.charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <h3 className="text-xl font-bold">{profile.name}</h3>
-                  <p className="text-gray-600">@{profile.username}</p>
-                </div>
-              </div>
-              {profile.bio && <p className="text-gray-700 mb-4">{profile.bio}</p>}
-              <div className="flex flex-wrap gap-2">
-                {socialLinks.map((link) => {
-                  const platform = PLATFORMS.find((p) => p.value === link.platform);
-                  return (
-                    <a
-                      key={link.id}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`px-3 py-1 ${platform?.color || 'bg-gray-500'} text-white rounded-full text-sm`}
+                    <button
+                      onClick={() => handleDeleteLink(link.id)}
+                      className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition"
                     >
-                      {platform?.label}
-                    </a>
-                  );
-                })}
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Profile Preview Card */}
+        <div className={cardClass}>
+          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-5">Profile Preview</h2>
+          <div className="rounded-lg p-6 bg-[var(--secondary)] border border-[var(--border)]">
+            <div className="flex items-center gap-4 mb-4">
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.name}
+                  className="w-16 h-16 rounded-full object-cover ring-2 ring-[var(--border)]"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-[var(--primary)] flex items-center justify-center text-white font-bold text-xl">
+                  {profile.name.charAt(0) || '?'}
+                </div>
+              )}
+              <div>
+                <h3 className="text-xl font-bold text-[var(--foreground)]">{profile.name || 'Your Name'}</h3>
+                <p className="text-[var(--muted-foreground)]">@{profile.username || 'username'}</p>
               </div>
+            </div>
+            {profile.bio && (
+              <p className="text-[var(--foreground)] text-sm mb-4">{profile.bio}</p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {socialLinks.map((link) => {
+                const platform = PLATFORMS[link.platform] || PLATFORMS.custom;
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 ${platform.color} ${platform.textColor} rounded-full text-xs font-medium hover:opacity-90 transition`}
+                  >
+                    <span className="w-3.5 h-3.5" dangerouslySetInnerHTML={{ __html: platform.logo }} />
+                    {link.label || platform.label}
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
