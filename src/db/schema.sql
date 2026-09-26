@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS attachments (
   file_name VARCHAR(500) NOT NULL,
   file_type VARCHAR(100) NOT NULL,
   file_size INTEGER NOT NULL,
+  file_data TEXT,
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   question_id VARCHAR(255),
   answer_id VARCHAR(255),

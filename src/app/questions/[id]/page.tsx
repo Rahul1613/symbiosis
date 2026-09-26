@@ -87,6 +87,7 @@ export default function QuestionDetailPage() {
   const AttachmentLink = ({ attachment }: { attachment: any }) => (
     <a
       href={attachment.file_url}
+      download={attachment.file_name}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2 px-3 py-2 bg-[var(--secondary)] border border-[var(--border)] rounded-lg hover:border-[var(--primary)] transition text-sm text-[var(--foreground)]"
