@@ -1,6 +1,5 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcrypt';
 import { query } from './db';
 
@@ -71,10 +70,6 @@ export const authOptions: NextAuthOptions = {
         };
       }
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    })
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -93,33 +88,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'google') {
-        // Check if user exists
-        const result = await query(
-          'SELECT * FROM users WHERE email = $1',
-          [user.email]
-        );
-
-        if (result.rows.length === 0) {
-          // Create new user
-          const username = user.email?.split('@')[0] || 'user';
-          const id = `user_${Date.now()}`;
-          
-          await query(
-            'INSERT INTO users (id, name, username, email, avatar_url) VALUES ($1, $2, $3, $4, $5)',
-            [id, user.name, username, user.email, user.image]
-          );
-
-          user.id = id;
-          user.username = username;
-        } else {
-          user.id = result.rows[0].id;
-          user.username = result.rows[0].username;
-        }
-      }
-      return true;
-    }
   },
   pages: {
     signIn: '/login',
