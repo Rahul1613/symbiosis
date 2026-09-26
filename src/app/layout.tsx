@@ -21,7 +21,11 @@ export const metadata: Metadata = {
   description: "Connect with others and share knowledge through public profiles and Q&A",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
